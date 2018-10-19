@@ -15,50 +15,51 @@
 package cmd
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/spf13/cobra"
-	"io/ioutil"
 	"log"
 	"os"
+
+	"github.com/nicwestvold/i18n/parser"
+	"github.com/nicwestvold/i18n/parser/real"
+	"github.com/spf13/cobra"
 )
 
 // keyCmd represents the key command
 var keyCmd = &cobra.Command{
 	Use:   "key",
 	Short: "Adds a new key to the default (en-US) i18n file.",
-	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
-		var data map[string]interface{}
+	// Args:  cobra.ExactArgs(2),
+	Run: run,
+}
 
-		// read the contents of the default file
-		content, err := ioutil.ReadFile("en-US.json")
-		if err != nil {
-			log.Fatalf("error reading file: %v", err)
-		}
+func run(cmd *cobra.Command, args []string) {
 
-		// unmarshal the JSON
-		if err := json.Unmarshal(content, &data); err != nil {
-			log.Fatalf("error unmarshalling JSON: %v", err)
-		}
+	var p parser.Parser
+	var err error
+	switch os.Getenv("WHICH_PARSER") {
+	case "real":
+		p, err = real.New("translations.json", "output.json")
+	default:
+		// p, err = fake.New()
+	}
 
-		// check if the key already exists in the i18n file
-		if val, ok := data[args[0]]; ok {
-			fmt.Println("key already exists with value: \"" + val.(string) + "\"")
-		} else {
-			fmt.Printf("added key - %s: \"%s\"\n", args[0], args[1])
-			data[args[0]] = args[1]
-			jsonStr, err := json.MarshalIndent(&data, "", "  ")
-			if err != nil {
-				log.Fatalf("error marshalling JSON: %v", err)
-			}
-			// write the new JSON to the file
-			err = ioutil.WriteFile("en-US.json", jsonStr, os.ModeAppend)
-			if err != nil {
-				log.Fatalf("error writing JSON file: %v", err)
-			}
-		}
-	},
+	if err != nil {
+		log.Fatalf("failed to create parser: %v", err)
+	}
+
+	data, err := p.ReadFile()
+	if err != nil {
+		log.Fatalf("failed to read data from file: %v", err)
+	}
+
+	out, err := p.Convert(data)
+	if err != nil {
+		log.Fatalf("failed to convert intput: %v", err)
+	}
+
+	// check if the key already exists in the i18n file
+	if err := p.WriteFile(out); err != nil {
+		log.Fatalf("failed to write JSON file: %v", err)
+	}
 }
 
 func init() {
