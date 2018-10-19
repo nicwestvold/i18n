@@ -33,7 +33,7 @@ var valuesCmd = &cobra.Command{
 		// open file
 		content, err := ioutil.ReadFile("en-US.json")
 		if err != nil {
-			log.Fatalf("error reading file: %v", err)
+			log.Fatalf("%v", err)
 		}
 
 		// get JSON
