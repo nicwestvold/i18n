@@ -15,25 +15,31 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
-// addCmd represents the add command
-var addCmd = &cobra.Command{
-	Use:   "add",
-	Short: "Add key/value to the default locale file",
+// localesCmd represents the locales command
+var localesCmd = &cobra.Command{
+	Use:   "locales",
+	Short: "Lists locales in use",
+	Run: func(cmd *cobra.Command, args []string) {
+		// this will list the locales that are currently in use
+		fmt.Println("* en-US")
+	},
 }
 
 func init() {
-	rootCmd.AddCommand(addCmd)
+	listCmd.AddCommand(localesCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// addCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// localesCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// addCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// localesCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
