@@ -15,10 +15,9 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/nicwestvold/i18n/parser/real"
 	"github.com/spf13/cobra"
-	"io/ioutil"
 	"log"
 	"strings"
 )
@@ -28,20 +27,16 @@ var valuesCmd = &cobra.Command{
 	Use:   "values",
 	Short: "List current key/values",
 	Run: func(cmd *cobra.Command, args []string) {
-		var data map[string]interface{}
-
-		// open file
-		content, err := ioutil.ReadFile("en-US.json")
+		p, err := real.New("en-US.json")
 		if err != nil {
-			log.Fatalf("%v", err)
+			log.Fatal(err)
+		}
+		data, err := p.ReadFile()
+		if err != nil {
+			log.Fatal(err)
 		}
 
-		// get JSON
-		if err := json.Unmarshal(content, &data); err != nil {
-			log.Fatalf("error unmarshalling JSON: %v", err)
-		}
-
-		// iterate over values, display
+		// iterate over values to get the max key length
 		maxLen := 0
 		for key := range data {
 			if len(key) > maxLen {
@@ -49,6 +44,7 @@ var valuesCmd = &cobra.Command{
 			}
 		}
 
+		// iterate over the values to display all key/values
 		for key, val := range data {
 			k := key + ": "
 			if len(key) < maxLen {
