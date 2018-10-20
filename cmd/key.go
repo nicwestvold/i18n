@@ -50,8 +50,8 @@ var keyCmd = &cobra.Command{
 		if ok && !forceIt {
 			fmt.Println("key already exists with value: \"" + data[args[0]].(string) + "\"")
 		} else {
-			if forceIt {
-				fmt.Printf("updating \"%s\" with value \"%s\" (previous: \"%s\")\n", args[0], args[1], data[args[0]].(string))
+			if forceIt && ok {
+				fmt.Printf("updating \"%s\" with value \"%s\" (previous: \"%s\")\n", args[0], args[2], data[args[0]].(string))
 			} else {
 				fmt.Printf("added key - %s: \"%s\"\n", args[0], args[1])
 			}
