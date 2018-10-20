@@ -17,19 +17,21 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
 	"os"
+
+	"github.com/spf13/cobra"
 )
 
 // keyCmd represents the key command
 var keyCmd = &cobra.Command{
-	Use:   "key",
+	Use:   "key [OPTIONS] <key> <value>",
 	Short: "Adds a new key to the default (en-US) i18n file.",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		var data map[string]interface{}
+		forceIt := cmd.Flag("force").Value.String() == "true"
 
 		// read the contents of the default file
 		content, err := ioutil.ReadFile("en-US.json")
@@ -43,10 +45,16 @@ var keyCmd = &cobra.Command{
 		}
 
 		// check if the key already exists in the i18n file
-		if val, ok := data[args[0]]; ok {
-			fmt.Println("key already exists with value: \"" + val.(string) + "\"")
+		_, ok := data[args[0]]
+		// if the "--force" flag is set, then replace, otherwise do nothing
+		if ok && !forceIt {
+			fmt.Println("key already exists with value: \"" + data[args[0]].(string) + "\"")
 		} else {
-			fmt.Printf("added key - %s: \"%s\"\n", args[0], args[1])
+			if forceIt {
+				fmt.Printf("updating \"%s\" with value \"%s\" (previous: \"%s\")\n", args[0], args[1], data[args[0]].(string))
+			} else {
+				fmt.Printf("added key - %s: \"%s\"\n", args[0], args[1])
+			}
 			data[args[0]] = args[1]
 			jsonStr, err := json.MarshalIndent(&data, "", "  ")
 			if err != nil {
@@ -73,4 +81,6 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// keyCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	keyCmd.Flags().BoolP("force", "f", false, "Overwrite any existing value")
 }
