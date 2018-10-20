@@ -15,13 +15,10 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"log"
-	"os"
-
+	"github.com/nicwestvold/i18n/parser/real"
 	"github.com/spf13/cobra"
+	"log"
 )
 
 // keyCmd represents the key command
@@ -30,18 +27,15 @@ var keyCmd = &cobra.Command{
 	Short: "Adds a new key to the default (en-US) i18n file.",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		var data map[string]interface{}
 		forceIt := cmd.Flag("force").Value.String() == "true"
 
-		// read the contents of the default file
-		content, err := ioutil.ReadFile("en-US.json")
+		p, err := real.New("en-US.json")
 		if err != nil {
-			log.Fatalf("error reading file: %v", err)
+			log.Fatal(err)
 		}
-
-		// unmarshal the JSON
-		if err := json.Unmarshal(content, &data); err != nil {
-			log.Fatalf("error unmarshalling JSON: %v", err)
+		data, err := p.ReadFile()
+		if err != nil {
+			log.Fatal(err)
 		}
 
 		// check if the key already exists in the i18n file
@@ -51,17 +45,13 @@ var keyCmd = &cobra.Command{
 			fmt.Println("key already exists with value: \"" + data[args[0]].(string) + "\"")
 		} else {
 			if forceIt && ok {
-				fmt.Printf("updating \"%s\" with value \"%s\" (previous: \"%s\")\n", args[0], args[2], data[args[0]].(string))
+				fmt.Printf("updating \"%s\" with value \"%s\" (previous: \"%s\")\n", args[0], args[1], data[args[0]].(string))
 			} else {
 				fmt.Printf("added key - %s: \"%s\"\n", args[0], args[1])
 			}
 			data[args[0]] = args[1]
-			jsonStr, err := json.MarshalIndent(&data, "", "  ")
-			if err != nil {
-				log.Fatalf("error marshalling JSON: %v", err)
-			}
-			// write the new JSON to the file
-			err = ioutil.WriteFile("en-US.json", jsonStr, os.ModeAppend)
+
+			err = p.WriteFile(p.Filename, data)
 			if err != nil {
 				log.Fatalf("error writing JSON file: %v", err)
 			}
